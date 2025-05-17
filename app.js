@@ -3,7 +3,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
 const cheerio = require("cheerio");
-const { ignore } = require("./config");
+const { ignore, globalVar } = require("./config");
 
 const app = express();
 
@@ -195,7 +195,7 @@ function checkForGlobalVariableMissing(
   fileName,
   content
 ) {
-  const globals = ["window", "document", "console"];
+  const globals = globalVar;
   globals.forEach((varName) => {
     if (content.includes(varName)) {
       warnings.push({
