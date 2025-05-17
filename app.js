@@ -102,7 +102,7 @@ async function checkFile(filePath, directoryPath, warnings) {
   const $ = cheerio.load(content);
 
   // Check for missing tags
-  checkForMissingTags($, warnings, filePath, path.basename(filePath), content);
+  //checkForMissingTags($, warnings, filePath, path.basename(filePath), content);
 
   // Check for missing alt attributes
   checkForMissingAltAttributes(
