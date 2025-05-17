@@ -91,6 +91,13 @@
             </div>
           </form>
 
+          <div id="loader" class="text-center my-4" style="display: none">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Checking files, please wait...</p>
+          </div>
+
           <% if (message) { %>
           <div class="alert alert-danger mt-3"><%= message %></div>
           <% } %> <% if (warnings && warnings.length > 0) { %>
@@ -127,16 +134,30 @@
     </div>
 
     <script>
-      document.getElementById("checkSingle").addEventListener("change", () => {
-        document.getElementById("fileInputGroup").style.display = "block";
-      });
-      document.getElementById("checkAll").addEventListener("change", () => {
-        document.getElementById("fileInputGroup").style.display = "none";
-      });
+      document
+        .getElementById("checkSingle")
+        .addEventListener("change", function () {
+          document.getElementById("fileInputGroup").style.display = "block";
+        });
+
+      document
+        .getElementById("checkAll")
+        .addEventListener("change", function () {
+          document.getElementById("fileInputGroup").style.display = "none";
+        });
+
       function resetForm() {
         document.getElementById("checkForm").reset();
         document.getElementById("fileInputGroup").style.display = "none";
+        document.getElementById("loader").style.display = "none";
       }
+
+      // Show loader on form submit
+      document
+        .getElementById("checkForm")
+        .addEventListener("submit", function () {
+          document.getElementById("loader").style.display = "block";
+        });
     </script>
   </body>
 </html>
