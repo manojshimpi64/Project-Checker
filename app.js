@@ -118,10 +118,15 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
   switch (checkOption) {
     case "showAll":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
-      //await checkForBrokenLinks($, warnings, filePath, fileName, content);
-      //checkForMissingFooter($, warnings, filePath, fileName, content);
-      checkForGlobalProjectVariablesMissing($, warnings, filePath, fileName, content);
-
+      await checkForBrokenLinks($, warnings, filePath, fileName, content);
+      checkForMissingFooter($, warnings, filePath, fileName, content);
+      checkForGlobalProjectVariablesMissing(
+        $,
+        warnings,
+        filePath,
+        fileName,
+        content
+      );
       break;
     case "missingAltTags":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
@@ -133,14 +138,26 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       checkForMissingFooter($, warnings, filePath, fileName, content);
       break;
     case "GlobalProjectVariablesMissing":
-      checkForGlobalProjectVariablesMissing($, warnings, filePath, fileName, content);
+      checkForGlobalProjectVariablesMissing(
+        $,
+        warnings,
+        filePath,
+        fileName,
+        content
+      );
       break;
   }
 }
 
 // ===== Check Functions =====
 
-function checkForMissingAltAttributes( $, warnings, filePath, fileName, content) {
+function checkForMissingAltAttributes(
+  $,
+  warnings,
+  filePath,
+  fileName,
+  content
+) {
   $("img").each((_, el) => {
     const alt = $(el).attr("alt");
     const src = $(el).attr("src") || "[no src]";
@@ -189,7 +206,13 @@ function checkForMissingFooter($, warnings, filePath, fileName, content) {
   }
 }
 
-function checkForGlobalProjectVariablesMissing( $, warnings, filePath, fileName, content) {
+function checkForGlobalProjectVariablesMissing(
+  $,
+  warnings,
+  filePath,
+  fileName,
+  content
+) {
   const globals = globalProjectVariables;
   globals.forEach((varName) => {
     if (content.includes(varName)) {
