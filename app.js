@@ -13,7 +13,7 @@ app.use(express.json());
 
 // Route to display the form
 app.get("/", (req, res) => {
-  res.render("index", { message: null, warnings: [] });
+  res.render("index", { message: null, warnings: [], warningCount: 0 });
 });
 
 // Route to handle form submission
@@ -27,12 +27,9 @@ app.post("/check", async (req, res) => {
     return res.render("index", {
       message: "Invalid directory path. Please try again.",
       warnings: [],
+      warningCount: 0,
     });
   }
-
-  app.get("/", (req, res) => {
-    res.render("index", { message: null, warnings: [] });
-  });
 
   try {
     if (checkType === "project") {
@@ -50,12 +47,16 @@ app.post("/check", async (req, res) => {
       }
     }
 
-    res.render("index", { message: null, warnings });
+    // Calculate the total count of warnings
+    const warningCount = warnings.length;
+
+    res.render("index", { message: null, warnings, warningCount });
   } catch (error) {
     console.error("Error during website check:", error.message);
     res.render("index", {
       message: "An error occurred. Please try again.",
       warnings: [],
+      warningCount: 0,
     });
   }
 });
