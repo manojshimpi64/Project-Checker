@@ -3,7 +3,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
 const cheerio = require("cheerio");
-const { ignore, globalVar } = require("./config");
+const { ignoreDirectories, globalProjectVariables } = require("./config");
 
 const app = express();
 
@@ -86,7 +86,7 @@ async function getReactFiles(dir) {
 
     // Skip ignored folders
     if (stat.isDirectory()) {
-      if (!ignore.includes(item)) {
+      if (!ignoreDirectories.includes(item)) {
         files.push(...(await getReactFiles(fullPath)));
       }
     } else if (/\.(js|jsx|html|php)$/.test(fullPath)) {
@@ -116,6 +116,13 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
   const $ = cheerio.load(content);
 
   switch (checkOption) {
+    case "showAll":
+      checkForMissingAltAttributes($, warnings, filePath, fileName, content);
+      //await checkForBrokenLinks($, warnings, filePath, fileName, content);
+      //checkForMissingFooter($, warnings, filePath, fileName, content);
+      checkForGlobalProjectVariablesMissing($, warnings, filePath, fileName, content);
+
+      break;
     case "missingAltTags":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
       break;
@@ -125,21 +132,15 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
     case "missingFooter":
       checkForMissingFooter($, warnings, filePath, fileName, content);
       break;
-    case "globalVariableMissing":
-      checkForGlobalVariableMissing($, warnings, filePath, fileName, content);
+    case "GlobalProjectVariablesMissing":
+      checkForGlobalProjectVariablesMissing($, warnings, filePath, fileName, content);
       break;
   }
 }
 
 // ===== Check Functions =====
 
-function checkForMissingAltAttributes(
-  $,
-  warnings,
-  filePath,
-  fileName,
-  content
-) {
+function checkForMissingAltAttributes( $, warnings, filePath, fileName, content) {
   $("img").each((_, el) => {
     const alt = $(el).attr("alt");
     const src = $(el).attr("src") || "[no src]";
@@ -188,14 +189,8 @@ function checkForMissingFooter($, warnings, filePath, fileName, content) {
   }
 }
 
-function checkForGlobalVariableMissing(
-  $,
-  warnings,
-  filePath,
-  fileName,
-  content
-) {
-  const globals = globalVar;
+function checkForGlobalProjectVariablesMissing( $, warnings, filePath, fileName, content) {
+  const globals = globalProjectVariables;
   globals.forEach((varName) => {
     if (content.includes(varName)) {
       warnings.push({
