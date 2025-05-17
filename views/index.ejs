@@ -17,7 +17,7 @@
           <form id="checkForm" action="/check" method="POST">
             <div class="mb-3">
               <label for="directoryPath" class="form-label"
-                >Enter Directory Path:</label
+                >Directory Path:</label
               >
               <input
                 type="text"
@@ -29,7 +29,7 @@
             </div>
 
             <fieldset class="mb-3">
-              <legend class="col-form-label">Choose Check Type:</legend>
+              <legend class="col-form-label">Check Type:</legend>
               <div class="form-check form-check-inline">
                 <input
                   class="form-check-input"
@@ -40,7 +40,7 @@
                   required
                 />
                 <label class="form-check-label" for="checkAll"
-                  >Check All Project Files</label
+                  >Full Project</label
                 >
               </div>
               <div class="form-check form-check-inline">
@@ -53,26 +53,36 @@
                   required
                 />
                 <label class="form-check-label" for="checkSingle"
-                  >Check Single File</label
+                  >Single File</label
                 >
               </div>
             </fieldset>
 
             <div class="mb-3" id="fileInputGroup" style="display: none">
-              <label for="pageName" class="form-label"
-                >Enter Page Name(s):</label
-              >
+              <label for="pageName" class="form-label">Page Name(s):</label>
               <input
                 type="text"
                 class="form-control"
                 id="pageName"
                 name="pageName"
-                placeholder="e.g., file1.js, file2.js"
+                placeholder="e.g., file1.html, file2.js"
               />
-              <small class="form-text text-muted">
-                For multiple files, separate by commas (e.g., file1.js,
-                file2.js, file3.html, file.php)
-              </small>
+              <small class="form-text text-muted"
+                >Separate multiple files with commas</small
+              >
+            </div>
+
+            <div class="mb-3">
+              <label for="checkOptions" class="form-label">Select Check:</label>
+              <select class="form-select" id="checkOptions" name="checkOption">
+                <option value="">-- Choose Check Type --</option>
+                <option value="missingAltTags">Missing Alt Tags</option>
+                <option value="brokenLinks">Broken Links</option>
+                <option value="missingFooter">Missing Footer</option>
+                <option value="globalVariableMissing">
+                  Global Variable Usage
+                </option>
+              </select>
             </div>
 
             <div class="d-flex justify-content-between">
@@ -85,27 +95,27 @@
           <div class="alert alert-danger mt-3"><%= message %></div>
           <% } %> <% if (warnings && warnings.length > 0) { %>
           <h3 class="mt-4">Errors Found: <%= warningCount %></h3>
-          <div class="table-responsive mt-2 col-md-12 col-lg-12">
-            <table class="table table-striped table-bordered mt-2">
+          <div class="table-responsive mt-2">
+            <table class="table table-striped table-bordered">
               <thead>
                 <tr>
-                  <th>Sr.No</th>
+                  <th>#</th>
                   <th>File Path</th>
                   <th>File Name</th>
-                  <th>Line Number</th>
-                  <th>Error Type</th>
-                  <th>Error Message</th>
+                  <th>Line</th>
+                  <th>Type</th>
+                  <th>Message</th>
                 </tr>
               </thead>
               <tbody>
-                <% warnings.forEach((warning, index) => { %>
+                <% warnings.forEach((w, i) => { %>
                 <tr>
-                  <td><%= index + 1 %></td>
-                  <td><%= warning.filePath %></td>
-                  <td><%= warning.fileName %></td>
-                  <td><%= warning.lineNumber %></td>
-                  <td><%= warning.type %></td>
-                  <td><%= warning.message %></td>
+                  <td><%= i + 1 %></td>
+                  <td><%= w.filePath %></td>
+                  <td><%= w.fileName %></td>
+                  <td><%= w.lineNumber %></td>
+                  <td><%= w.type %></td>
+                  <td><%= w.message %></td>
                 </tr>
                 <% }) %>
               </tbody>
@@ -117,18 +127,12 @@
     </div>
 
     <script>
-      document
-        .getElementById("checkSingle")
-        .addEventListener("change", function () {
-          document.getElementById("fileInputGroup").style.display = "block";
-        });
-
-      document
-        .getElementById("checkAll")
-        .addEventListener("change", function () {
-          document.getElementById("fileInputGroup").style.display = "none";
-        });
-
+      document.getElementById("checkSingle").addEventListener("change", () => {
+        document.getElementById("fileInputGroup").style.display = "block";
+      });
+      document.getElementById("checkAll").addEventListener("change", () => {
+        document.getElementById("fileInputGroup").style.display = "none";
+      });
       function resetForm() {
         document.getElementById("checkForm").reset();
         document.getElementById("fileInputGroup").style.display = "none";
