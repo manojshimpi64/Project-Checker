@@ -3,6 +3,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const { ignore } = require("./config");
 
 const app = express();
 
@@ -31,16 +32,31 @@ app.post("/check", async (req, res) => {
   }
 
   try {
+    const allFiles = await getReactFiles(directoryPath);
+
     if (checkType === "project") {
-      const reactFiles = await getReactFiles(directoryPath);
-      for (let file of reactFiles) {
+      for (let file of allFiles) {
         await checkFile(file, directoryPath, warnings, checkOption);
       }
     } else {
       const pageFiles = pageName.split(",").map((name) => name.trim());
+
       for (let page of pageFiles) {
-        const pageFile = path.join(directoryPath, page);
-        await checkFile(pageFile, directoryPath, warnings, checkOption);
+        const matchedFiles = allFiles.filter((file) => file.endsWith(page));
+
+        if (matchedFiles.length === 0) {
+          warnings.push({
+            filePath: directoryPath,
+            fileName: page,
+            type: "⚠️ File not found",
+            message: `The file '${page}' was not found in any subdirectory.`,
+          });
+          continue;
+        }
+
+        for (let filePath of matchedFiles) {
+          await checkFile(filePath, directoryPath, warnings, checkOption);
+        }
       }
     }
 
@@ -68,12 +84,16 @@ async function getReactFiles(dir) {
     const fullPath = path.join(dir, item);
     const stat = await fs.stat(fullPath);
 
+    // Skip ignored folders
     if (stat.isDirectory()) {
-      files.push(...(await getReactFiles(fullPath)));
+      if (!ignore.includes(item)) {
+        files.push(...(await getReactFiles(fullPath)));
+      }
     } else if (/\.(js|jsx|html|php)$/.test(fullPath)) {
       files.push(fullPath);
     }
   }
+
   return files;
 }
 
