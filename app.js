@@ -187,18 +187,23 @@ function checkForMissingAltAttributes(
   $("img").each((_, el) => {
     const alt = $(el).attr("alt");
     const src = $(el).attr("src") || "[no src]";
+
     let lineNumber = -1;
     let shouldIgnore = false;
+
     for (let i = 0; i < lines.length; i++) {
       if (src !== "[no src]" && lines[i].includes(src)) {
         lineNumber = i + 1;
+
         if (lines[i].includes("#evIgnore")) {
           shouldIgnore = true;
         }
         break;
       }
     }
+
     if (shouldIgnore) return; // ⬅️ Only skips this image
+
     if (!alt || alt.trim() === "") {
       warnings.push({
         filePath,
