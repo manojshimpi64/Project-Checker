@@ -121,6 +121,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
       checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
+      checkForFaviconOnly($, warnings, filePath, fileName, content);
       checkForGlobalProjectVariablesMissing(
         $,
         warnings,
@@ -131,6 +132,9 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       break;
     case "missingAltTags":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
+      break;
+    case "faviconOnly":
+      checkForFaviconOnly($, warnings, filePath, fileName, content);
       break;
     case "brokenLinks":
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
@@ -287,19 +291,36 @@ function checkForGlobalProjectVariablesMissing(
   });
 }
 
-// Utility: Line number locator
-// function findLineNumber(searchString, content) {
-//   const lines = content.split("\n");
-//   for (let i = 0; i < lines.length; i++) {
-//     if (lines[i].includes(searchString)) return i + 1;
-//   }
-//   return -1;
-// }
+// Favicon Check
+function checkForFaviconOnly($, warnings, filePath, fileName, content) {
+  const hasFavicon =
+    $('link[rel="icon"]').length > 0 ||
+    $('link[rel="shortcut icon"]').length > 0;
 
-function findLineNumber(searchString, content, fromIndex = 0) {
+  if (!hasFavicon) {
+    warnings.push({
+      filePath,
+      fileName,
+      type: "⚠️ Missing Favicon",
+      message: "No favicon found. Consider adding <link rel='icon'> in <head>.",
+      lineNumber: findLineNumber("<head>", content),
+    });
+  }
+}
+
+// Utility: Line number locator
+function findLineNumber(searchString, content) {
+  const lines = content.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes(searchString)) return i + 1;
+  }
+  return -1;
+}
+
+/*function findLineNumber(searchString, content, fromIndex = 0) {
   const lines = content.slice(0, fromIndex).split("\n");
   return lines.length;
-}
+}*/
 
 // Start server
 app.listen(3000, () => {
