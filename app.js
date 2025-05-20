@@ -15,7 +15,15 @@ app.use(express.json());
 
 // Routes
 app.get("/", (req, res) => {
-  res.render("index", { message: null, warnings: [], warningCount: 0 });
+  res.render("index", {
+    message: null,
+    warnings: [],
+    warningCount: 0,
+    directoryPath: "",
+    pageName: "",
+    checkType: "",
+    checkOption: "",
+  });
 });
 
 app.post("/check", async (req, res) => {
@@ -60,10 +68,19 @@ app.post("/check", async (req, res) => {
       }
     }
 
+    /*res.render("index", {
+      message: null,
+      warnings,
+      warningCount: warnings.length,
+    });*/
     res.render("index", {
       message: null,
       warnings,
       warningCount: warnings.length,
+      directoryPath,
+      pageName,
+      checkType,
+      checkOption,
     });
   } catch (error) {
     console.error("Error during check:", error.message);
@@ -121,7 +138,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
       checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
-      checkForFaviconOnly($, warnings, filePath, fileName, content);
+
       checkForGlobalProjectVariablesMissing(
         $,
         warnings,
@@ -132,9 +149,6 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       break;
     case "missingAltTags":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
-      break;
-    case "faviconOnly":
-      checkForFaviconOnly($, warnings, filePath, fileName, content);
       break;
     case "brokenLinks":
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
@@ -335,23 +349,6 @@ function checkForGlobalProjectVariablesMissing(
     }
   });
 } */
-
-// Favicon Check
-function checkForFaviconOnly($, warnings, filePath, fileName, content) {
-  const hasFavicon =
-    $('link[rel="icon"]').length > 0 ||
-    $('link[rel="shortcut icon"]').length > 0;
-
-  if (!hasFavicon) {
-    warnings.push({
-      filePath,
-      fileName,
-      type: "⚠️ Missing Favicon",
-      message: "No favicon found. Consider adding <link rel='icon'> in <head>.",
-      lineNumber: findLineNumber("<head>", content),
-    });
-  }
-}
 
 // Utility: Line number locator
 function findLineNumber(searchString, content) {
