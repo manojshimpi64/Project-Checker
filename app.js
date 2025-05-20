@@ -190,20 +190,61 @@ function checkForMissingAltAttributes(
   fileName,
   content
 ) {
+  const lines = content.split("\n");
+
   $("img").each((_, el) => {
     const alt = $(el).attr("alt");
     const src = $(el).attr("src") || "[no src]";
-    if (!alt || alt.trim() === "") {
-      warnings.push({
-        filePath,
-        fileName,
-        type: "⚠️ Missing alt",
-        message: `Image with src '${src}' is missing alt text.`,
-        lineNumber: findLineNumber(src, content),
-      });
+    const html = $.html(el);
+
+    // Find which line this <img> tag appears on
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes(html)) {
+        const lineContent = lines[i];
+
+        // Skip if line contains "#evIgnore"
+        if (lineContent.includes("#evIgnore")) {
+          return;
+        }
+
+        if (!alt || alt.trim() === "") {
+          warnings.push({
+            filePath,
+            fileName,
+            type: "⚠️ Missing alt",
+            message: `Image with src '${src}' is missing alt text.`,
+            lineNumber: i + 1,
+          });
+        }
+
+        break; // Found the line, no need to continue
+      }
     }
   });
 }
+
+// below fun by Manoj
+// function checkForMissingAltAttributes(
+//   $,
+//   warnings,
+//   filePath,
+//   fileName,
+//   content
+// ) {
+//   $("img").each((_, el) => {
+//     const alt = $(el).attr("alt");
+//     const src = $(el).attr("src") || "[no src]";
+//     if (!alt || alt.trim() === "") {
+//       warnings.push({
+//         filePath,
+//         fileName,
+//         type: "⚠️ Missing alt",
+//         message: `Image with src '${src}' is missing alt text.`,
+//         lineNumber: findLineNumber(src, content),
+//       });
+//     }
+//   });
+// }
 
 async function checkForBrokenLinks($, warnings, filePath, fileName, content) {
   const links = $("a")
