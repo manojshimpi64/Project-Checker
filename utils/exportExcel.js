@@ -1,5 +1,11 @@
-// utils/exportExcel.js
 const ExcelJS = require("exceljs");
+
+function getFormattedDate() {
+  const date = new Date();
+  return `${String(date.getDate()).padStart(2, "0")}-${String(
+    date.getMonth() + 1
+  ).padStart(2, "0")}-${date.getFullYear()}`;
+}
 
 async function generateExcel(warnings, res) {
   const workbook = new ExcelJS.Workbook();
@@ -25,9 +31,11 @@ async function generateExcel(warnings, res) {
     });
   });
 
+  const dateStr = getFormattedDate();
+
   res.setHeader(
     "Content-Disposition",
-    "attachment; filename=code-checker-report.xlsx"
+    `attachment; filename=checking_report_${dateStr}.xlsx`
   );
   res.setHeader(
     "Content-Type",
