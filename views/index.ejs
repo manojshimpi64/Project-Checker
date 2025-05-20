@@ -111,7 +111,7 @@
 
           <script>
             document.addEventListener("DOMContentLoaded", function () {
-              const warnings = JSON.parse('<%- JSON.stringify(warnings || []).replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>');
+              const warnings = JSON.parse(`<%- JSON.stringify(warnings || []).replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>`);
               const exportDataInput = document.getElementById("exportData");
               if (exportDataInput) {
                 exportDataInput.value = JSON.stringify(warnings);
