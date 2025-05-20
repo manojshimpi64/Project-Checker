@@ -94,6 +94,33 @@
             </div>
           </form>
 
+
+         <!-- After warnings table -->
+          <% if (warnings && warnings.length > 0) { %>
+            <form id="exportForm" class="d-flex gap-2 mt-3">
+              <input type="hidden" name="data" id="exportData" />
+              <button type="submit" formaction="/export/pdf" formmethod="POST" class="btn btn-outline-dark">
+                Download PDF
+              </button>
+              <button type="submit" formaction="/export/excel" formmethod="POST" class="btn btn-outline-success">
+                Download Excel
+              </button>
+            </form>
+          <% } %>
+
+
+          <script>
+            document.addEventListener("DOMContentLoaded", function () {
+              const warnings = JSON.parse('<%- JSON.stringify(warnings || []).replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>');
+              const exportDataInput = document.getElementById("exportData");
+              if (exportDataInput) {
+                exportDataInput.value = JSON.stringify(warnings);
+              }
+            });
+          </script>
+
+
+
           <div id="loader" class="text-center my-4" style="display: none">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
@@ -169,6 +196,9 @@
         .addEventListener("submit", function () {
           document.getElementById("loader").style.display = "block";
         });
+
+
+        
     </script>
   </body>
 </html>

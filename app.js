@@ -4,6 +4,8 @@ const path = require("path");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { ignoreDirectories, globalProjectVariables } = require("./config");
+const generateExcel = require("./utils/exportExcel");
+const generatePdf = require("./utils/exportPdf");
 
 const app = express();
 
@@ -12,6 +14,16 @@ app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+app.post("/export/pdf", (req, res) => {
+  const warnings = JSON.parse(req.body.data || "[]");
+  generatePdf(warnings, res);
+});
+
+app.post("/export/excel", async (req, res) => {
+  const warnings = JSON.parse(req.body.data || "[]");
+  await generateExcel(warnings, res);
+});
 
 // Routes
 app.get("/", (req, res) => {
