@@ -273,6 +273,51 @@ function checkForGlobalProjectVariablesMissing(
   content
 ) {
   const globals = globalProjectVariables;
+  const lines = content.split("\n");
+
+  globals.forEach((varName) => {
+    const regex = new RegExp(varName, "g"); // Match all occurrences
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+      const matchIndex = match.index;
+
+      // Find the line number and content
+      let charCount = 0;
+      let lineNumber = 0;
+      for (let i = 0; i < lines.length; i++) {
+        charCount += lines[i].length + 1; // +1 for the newline char
+        if (charCount > matchIndex) {
+          lineNumber = i + 1;
+          break;
+        }
+      }
+
+      const lineContent = lines[lineNumber - 1];
+
+      // Skip if the line contains "#evIgnore"
+      if (lineContent.includes("#evIgnore")) continue;
+
+      warnings.push({
+        filePath,
+        fileName,
+        type: "⚠️ Global variable usage",
+        message: `Global variable '${varName}' found. Consider modular approach.`,
+        lineNumber,
+      });
+    }
+  });
+}
+
+/*
+function checkForGlobalProjectVariablesMissing(
+  _,
+  warnings,
+  filePath,
+  fileName,
+  content
+) {
+  const globals = globalProjectVariables;
 
   globals.forEach((varName) => {
     const regex = new RegExp(varName, "g"); // Match all occurrences
@@ -289,7 +334,7 @@ function checkForGlobalProjectVariablesMissing(
       });
     }
   });
-}
+} */
 
 // Favicon Check
 function checkForFaviconOnly($, warnings, filePath, fileName, content) {
