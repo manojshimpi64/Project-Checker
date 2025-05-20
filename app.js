@@ -36,6 +36,12 @@ app.post("/check", async (req, res) => {
       message: "Invalid directory path. Please try again.",
       warnings: [],
       warningCount: 0,
+      warnings: [],
+      warningCount: 0,
+      directoryPath,
+      pageName,
+      checkType,
+      checkOption,
     });
   }
 
@@ -88,6 +94,10 @@ app.post("/check", async (req, res) => {
       message: "An error occurred. Please try again.",
       warnings: [],
       warningCount: 0,
+      directoryPath,
+      pageName,
+      checkType,
+      checkOption,
     });
   }
 });
