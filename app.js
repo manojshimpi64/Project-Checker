@@ -240,34 +240,65 @@ function checkForMissingFooter($, warnings, filePath, fileName, content) {
   }
 }
 
+// function checkForGlobalProjectVariablesMissing(
+//   $,
+//   warnings,
+//   filePath,
+//   fileName,
+//   content
+// ) {
+//   const globals = globalProjectVariables;
+//   globals.forEach((varName) => {
+//     if (content.includes(varName)) {
+//       warnings.push({
+//         filePath,
+//         fileName,
+//         type: "⚠️ Global variable usage",
+//         message: `Global variable '${varName}' found. Consider modular approach.`,
+//         lineNumber: findLineNumber(varName, content),
+//       });
+//     }
+//   });
+// }
+
 function checkForGlobalProjectVariablesMissing(
-  $,
+  _,
   warnings,
   filePath,
   fileName,
   content
 ) {
   const globals = globalProjectVariables;
+
   globals.forEach((varName) => {
-    if (content.includes(varName)) {
+    const regex = new RegExp(varName, "g"); // Match all occurrences
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      const lineNumber = findLineNumber(varName, content, match.index);
+
       warnings.push({
         filePath,
         fileName,
         type: "⚠️ Global variable usage",
         message: `Global variable '${varName}' found. Consider modular approach.`,
-        lineNumber: findLineNumber(varName, content),
+        lineNumber,
       });
     }
   });
 }
 
 // Utility: Line number locator
-function findLineNumber(searchString, content) {
-  const lines = content.split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes(searchString)) return i + 1;
-  }
-  return -1;
+// function findLineNumber(searchString, content) {
+//   const lines = content.split("\n");
+//   for (let i = 0; i < lines.length; i++) {
+//     if (lines[i].includes(searchString)) return i + 1;
+//   }
+//   return -1;
+// }
+
+function findLineNumber(searchString, content, fromIndex = 0) {
+  const lines = content.slice(0, fromIndex).split("\n");
+  return lines.length;
 }
 
 // Start server
