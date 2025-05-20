@@ -176,7 +176,6 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
 }
 
 // ===== Check Functions =====
-
 function checkForMissingAltAttributes(
   $,
   warnings,
@@ -185,26 +184,21 @@ function checkForMissingAltAttributes(
   content
 ) {
   const lines = content.split("\n");
-
   $("img").each((_, el) => {
     const alt = $(el).attr("alt");
     const src = $(el).attr("src") || "[no src]";
-
-    // Try to find the line that contains the src
     let lineNumber = -1;
+    let shouldIgnore = false;
     for (let i = 0; i < lines.length; i++) {
       if (src !== "[no src]" && lines[i].includes(src)) {
         lineNumber = i + 1;
-
-        // Skip if marked with #evIgnore
         if (lines[i].includes("#evIgnore")) {
-          return;
+          shouldIgnore = true;
         }
-
         break;
       }
     }
-
+    if (shouldIgnore) return; // ⬅️ Only skips this image
     if (!alt || alt.trim() === "") {
       warnings.push({
         filePath,
@@ -217,7 +211,7 @@ function checkForMissingAltAttributes(
   });
 }
 
-// below fun by Manoj
+// by sunil
 // function checkForMissingAltAttributes(
 //   $,
 //   warnings,
@@ -225,17 +219,35 @@ function checkForMissingAltAttributes(
 //   fileName,
 //   content
 // ) {
+//   const lines = content.split("\n");
+
 //   $("img").each((_, el) => {
 //     const alt = $(el).attr("alt");
 //     const src = $(el).attr("src") || "[no src]";
-//     if (!alt || alt.trim() === "") {
-//       warnings.push({
-//         filePath,
-//         fileName,
-//         type: "⚠️ Missing alt",
-//         message: `Image with src '${src}' is missing alt text.`,
-//         lineNumber: findLineNumber(src, content),
-//       });
+//     const html = $.html(el);
+
+//     // Find which line this <img> tag appears on
+//     for (let i = 0; i < lines.length; i++) {
+//       if (lines[i].includes(html)) {
+//         const lineContent = lines[i];
+
+//         // Skip if line contains "#evIgnore"
+//         if (lineContent.includes("#evIgnore")) {
+//           return;
+//         }
+
+//         if (!alt || alt.trim() === "") {
+//           warnings.push({
+//             filePath,
+//             fileName,
+//             type: "⚠️ Missing alt",
+//             message: `Image with src '${src}' is missing alt text.`,
+//             lineNumber: i + 1,
+//           });
+//         }
+
+//         break; // Found the line, no need to continue
+//       }
 //     }
 //   });
 // }
