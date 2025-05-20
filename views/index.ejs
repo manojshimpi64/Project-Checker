@@ -103,11 +103,10 @@
 
           <% if (message) { %>
           <div class="alert alert-danger mt-3"><%= message %></div>
-          <% } else if (warnings && warnings.length === 0) { %>
-          <div class="alert alert-success mt-3">
-            ✅ No issues found. Your code is clean!
-          </div>
-          <% } %> <% if (warnings && warnings.length > 0) { %>
+          <% } %>
+
+          
+          <% if (warnings && warnings.length > 0) { %>
           <div class="alert alert-danger mt-4">
             ❌ <strong><%= warningCount %></strong> issue(s) found during the
             check.
@@ -141,6 +140,7 @@
             </table>
           </div>
           <% }  %>
+          
         </div>
       </div>
     </div>
