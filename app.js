@@ -36,8 +36,6 @@ app.post("/check", async (req, res) => {
       message: "Invalid directory path. Please try again.",
       warnings: [],
       warningCount: 0,
-      warnings: [],
-      warningCount: 0,
       directoryPath,
       pageName,
       checkType,
@@ -74,11 +72,6 @@ app.post("/check", async (req, res) => {
       }
     }
 
-    /*res.render("index", {
-      message: null,
-      warnings,
-      warningCount: warnings.length,
-    });*/
     const hasWarnings = warnings.length > 0;
     res.render("index", {
       message: hasWarnings ? null : "✅ No issues found!",
@@ -146,8 +139,8 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
   switch (checkOption) {
     case "showAll":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
-      //await checkForBrokenLinks($, warnings, filePath, fileName, content);
-      //checkForMissingFooter($, warnings, filePath, fileName, content);
+      await checkForBrokenLinks($, warnings, filePath, fileName, content);
+      checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
 
       checkForGlobalProjectVariablesMissing(
@@ -196,30 +189,30 @@ function checkForMissingAltAttributes(
   $("img").each((_, el) => {
     const alt = $(el).attr("alt");
     const src = $(el).attr("src") || "[no src]";
-    const html = $.html(el);
 
-    // Find which line this <img> tag appears on
+    // Try to find the line that contains the src
+    let lineNumber = -1;
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes(html)) {
-        const lineContent = lines[i];
+      if (src !== "[no src]" && lines[i].includes(src)) {
+        lineNumber = i + 1;
 
-        // Skip if line contains "#evIgnore"
-        if (lineContent.includes("#evIgnore")) {
+        // Skip if marked with #evIgnore
+        if (lines[i].includes("#evIgnore")) {
           return;
         }
 
-        if (!alt || alt.trim() === "") {
-          warnings.push({
-            filePath,
-            fileName,
-            type: "⚠️ Missing alt",
-            message: `Image with src '${src}' is missing alt text.`,
-            lineNumber: i + 1,
-          });
-        }
-
-        break; // Found the line, no need to continue
+        break;
       }
+    }
+
+    if (!alt || alt.trim() === "") {
+      warnings.push({
+        filePath,
+        fileName,
+        type: "⚠️ Missing alt",
+        message: `Image with src '${src}' is missing alt text.`,
+        lineNumber: lineNumber !== -1 ? lineNumber : null,
+      });
     }
   });
 }
