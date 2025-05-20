@@ -3,6 +3,8 @@ const fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const bodyParser = require("body-parser");
+
 const { ignoreDirectories, globalProjectVariables } = require("./config");
 const generateExcel = require("./utils/exportExcel");
 const generatePdf = require("./utils/exportPdf");
@@ -12,6 +14,10 @@ const app = express();
 // Middleware setup
 app.set("view engine", "ejs");
 app.use(express.static("public"));
+
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
