@@ -120,6 +120,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
       checkForMissingFooter($, warnings, filePath, fileName, content);
+      checkForHtmlComments($, warnings, filePath, fileName, content);
       checkForGlobalProjectVariablesMissing(
         $,
         warnings,
@@ -136,6 +137,9 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       break;
     case "missingFooter":
       checkForMissingFooter($, warnings, filePath, fileName, content);
+      break;
+    case "htmlComments":
+      checkForHtmlComments($, warnings, filePath, fileName, content);
       break;
     case "GlobalProjectVariablesMissing":
       checkForGlobalProjectVariablesMissing(
@@ -192,6 +196,36 @@ async function checkForBrokenLinks($, warnings, filePath, fileName, content) {
   );
 
   await Promise.all(promises);
+}
+
+function checkForHtmlComments($, warnings, filePath, fileName, content) {
+  const commentRegex = /<!--([\s\S]*?)-->/g;
+  let match;
+
+  while ((match = commentRegex.exec(content)) !== null) {
+    const fullMatch = match[0]; // Full comment string: <!-- ... -->
+    const commentText = match[1].trim(); // Inner text
+    const lineNumber = findLineNumber(fullMatch, content);
+
+    // Skip empty comments
+    if (!commentText) continue;
+
+    // Determine if it's single-line or multi-line
+    const isMultiline = fullMatch.includes("\n");
+    const type = isMultiline
+      ? "📄 Multi-line HTML comment"
+      : "💬 Single-line HTML comment";
+
+    warnings.push({
+      filePath,
+      fileName,
+      type,
+      message: `Found HTML comment: "${commentText.slice(0, 80)}${
+        commentText.length > 80 ? "..." : ""
+      }"`,
+      lineNumber,
+    });
+  }
 }
 
 function checkForMissingFooter($, warnings, filePath, fileName, content) {

@@ -50,7 +50,6 @@
                   id="checkSingle"
                   name="checkType"
                   value="single"
-                  required
                 />
                 <label class="form-check-label" for="checkSingle"
                   >Single File</label
@@ -67,9 +66,7 @@
                 name="pageName"
                 placeholder="e.g., file1.html, file2.js"
               />
-              <small class="form-text text-muted"
-                >Separate multiple files with commas</small
-              >
+              <div class="form-text">Separate multiple files with commas</div>
             </div>
 
             <div class="mb-3">
@@ -81,11 +78,12 @@
                 required
               >
                 <option value="">-- Choose Check Type --</option>
-                <option value="showAll">Chack All</option>
+                <option value="showAll">Check All</option>
                 <option value="missingAltTags">Missing Alt Tags</option>
+                <option value="htmlComments">HTML Comments</option>
                 <option value="brokenLinks">Broken Links</option>
                 <option value="missingFooter">Missing Footer</option>
-                <option value="globalVariableMissing">
+                <option value="GlobalProjectVariablesMissing">
                   Global Variable Usage
                 </option>
               </select>
@@ -93,7 +91,13 @@
 
             <div class="d-flex justify-content-between">
               <button type="submit" class="btn btn-primary">Submit</button>
-              <a href="/" class="btn btn-danger" onclick="resetForm()">Reset</a>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onclick="resetForm()"
+              >
+                Reset
+              </button>
             </div>
           </form>
 
@@ -158,7 +162,6 @@
         document.getElementById("loader").style.display = "none";
       }
 
-      // Show loader on form submit
       document
         .getElementById("checkForm")
         .addEventListener("submit", function () {
