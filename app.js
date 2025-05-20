@@ -146,8 +146,8 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
   switch (checkOption) {
     case "showAll":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
-      await checkForBrokenLinks($, warnings, filePath, fileName, content);
-      checkForMissingFooter($, warnings, filePath, fileName, content);
+      //await checkForBrokenLinks($, warnings, filePath, fileName, content);
+      //checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
 
       checkForGlobalProjectVariablesMissing(
