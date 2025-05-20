@@ -79,8 +79,9 @@ app.post("/check", async (req, res) => {
       warnings,
       warningCount: warnings.length,
     });*/
+    const hasWarnings = warnings.length > 0;
     res.render("index", {
-      message: null,
+      message: hasWarnings ? null : "✅ No issues found!",
       warnings,
       warningCount: warnings.length,
       directoryPath,
