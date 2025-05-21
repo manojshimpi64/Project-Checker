@@ -1,10 +1,20 @@
-// utils/exportPdf.js
 const PDFDocument = require("pdfkit");
+
+function getFormattedDate() {
+  const date = new Date();
+  return `${String(date.getDate()).padStart(2, "0")}-${String(
+    date.getMonth() + 1
+  ).padStart(2, "0")}-${date.getFullYear()}`;
+}
 
 function generatePdf(warnings, res) {
   const doc = new PDFDocument();
+  const dateStr = getFormattedDate();
 
-  res.setHeader("Content-disposition", "attachment; filename=report.pdf");
+  res.setHeader(
+    "Content-disposition",
+    `attachment; filename=checking_report_${dateStr}.pdf`
+  );
   res.setHeader("Content-type", "application/pdf");
 
   doc.pipe(res);
