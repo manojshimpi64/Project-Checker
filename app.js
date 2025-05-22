@@ -1,6 +1,8 @@
 const express = require("express");
 const fs = require("fs-extra");
 const path = require("path");
+const glob = require("glob");
+
 const axios = require("axios");
 const cheerio = require("cheerio");
 const bodyParser = require("body-parser");
@@ -158,7 +160,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
     case "showAll":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
       checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
-      removeConsoleLogs($, warnings, filePath, fileName, content);
+      awaitremoveConsoleLogs($, warnings, filePath, fileName, content);
       //await checkForBrokenLinks($, warnings, filePath, fileName, content);
       //checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
@@ -178,7 +180,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
       break;
     case "consoleLogs":
-      removeConsoleLogs($, warnings, filePath, fileName, content);
+      await removeConsoleLogs($, warnings, filePath, fileName, content);
       break;
     case "brokenLinks":
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
@@ -469,7 +471,7 @@ function checkForInvalidMailtoLinks($, warnings, filePath, fileName, content) {
 }
 
 // checkForConsoleLogs
-function removeConsoleLogs(_, warnings, filePath, fileName, content) {
+async function removeConsoleLogs(_, warnings, filePath, fileName, content) {
   const lines = content.split("\n");
   lines.forEach((line, index) => {
     if (
@@ -483,7 +485,7 @@ function removeConsoleLogs(_, warnings, filePath, fileName, content) {
         filePath,
         fileName,
         type: "⚠️ Console statement",
-        message: `Avoid using '${line.trim()}' in production code.`,
+        message: `Avoid using console statement at line ${index + 1}`,
         lineNumber: index + 1,
       });
     }
