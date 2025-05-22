@@ -143,6 +143,46 @@ async function getReactFiles(dir) {
   return files;
 }
 
+//start
+// Get all folders recursively
+async function getAllFolders(dir, folders = []) {
+  const items = await fs.readdir(dir);
+
+  for (const item of items) {
+    const fullPath = path.join(dir, item);
+    const stat = await fs.stat(fullPath);
+
+    if (stat.isDirectory() && !ignoreDirectories.includes(item)) {
+      folders.push(fullPath);
+      await getAllFolders(fullPath, folders);
+    }
+  }
+
+  return folders;
+}
+
+// Push warning if index.php was created
+async function checkFolderForMissingIndexPhp(folderPath, warnings) {
+  const indexPath = path.join(folderPath, "index.php");
+  const exists = await fs.pathExists(indexPath);
+
+  if (!exists) {
+    await fs.writeFile(indexPath, "<?php\n// Auto-generated index.php\n?>");
+
+    // Add this debug log line here:
+    // console.log("Reporting missing index.php:", folderPath);
+
+    warnings.push({
+      filePath: folderPath,
+      fileName: "index.php",
+      type: "⚠️ Missing index.php",
+      message: `index.php was missing and has been created.`,
+      lineNumber: "N/A",
+    });
+  }
+}
+//end
+
 // File check based on selected check option
 async function checkFile(filePath, basePath, warnings, checkOption) {
   const exists = await fs.pathExists(filePath);
@@ -161,6 +201,9 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
   const content = await fs.readFile(filePath, "utf-8");
   const $ = cheerio.load(content);
 
+  //start - global
+  const allFolders = await getAllFolders(basePath); // "basePath" is equal to "directoryPath"
+
   switch (checkOption) {
     case "showAll":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
@@ -170,6 +213,12 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       //await checkForBrokenLinks($, warnings, filePath, fileName, content);
       //checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
+
+      //start - Scan all folders (including empty ones)
+      for (const folder of allFolders) {
+        await checkFolderForMissingIndexPhp(folder, warnings);
+      }
+      //end
 
       checkForGlobalProjectVariablesMissing(
         $,
@@ -209,6 +258,11 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
         fileName,
         content
       );
+      break;
+    case "missingIndexPhp":
+      for (const folder of allFolders) {
+        await checkFolderForMissingIndexPhp(folder, warnings);
+      }
       break;
   }
 }
