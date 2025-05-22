@@ -158,6 +158,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
     case "showAll":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
       checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
+      removeConsoleLogs($, warnings, filePath, fileName, content);
       //await checkForBrokenLinks($, warnings, filePath, fileName, content);
       //checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
@@ -175,6 +176,9 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       break;
     case "invalidMailtoLinks":
       checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
+      break;
+    case "consoleLogs":
+      removeConsoleLogs($, warnings, filePath, fileName, content);
       break;
     case "brokenLinks":
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
@@ -423,10 +427,7 @@ function checkForInvalidMailtoLinks($, warnings, filePath, fileName, content) {
     if (!href.startsWith("mailto:")) return;
 
     const email = href.replace("mailto:", "").trim();
-
-    // Prepare a snippet to search for: use href + 'href="' to avoid false matches
     const searchSnippet = `href="${href}"`;
-
     // Find index of this link starting from lastIndex to support duplicates
     const index = content.indexOf(searchSnippet, lastIndex);
 
@@ -462,6 +463,28 @@ function checkForInvalidMailtoLinks($, warnings, filePath, fileName, content) {
         type: '⚠️ Missing target="_blank"',
         message: `Mailto link '${href}' should use target="_blank".`,
         lineNumber,
+      });
+    }
+  });
+}
+
+// checkForConsoleLogs
+function removeConsoleLogs(_, warnings, filePath, fileName, content) {
+  const lines = content.split("\n");
+  lines.forEach((line, index) => {
+    if (
+      line.includes("console.log") ||
+      line.includes("console.error") ||
+      line.includes("console.warn")
+    ) {
+      if (line.includes("#evIgnore")) return;
+
+      warnings.push({
+        filePath,
+        fileName,
+        type: "⚠️ Console statement",
+        message: `Avoid using '${line.trim()}' in production code.`,
+        lineNumber: index + 1,
       });
     }
   });
