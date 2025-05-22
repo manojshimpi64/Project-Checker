@@ -431,12 +431,20 @@ function checkForGlobalProjectVariablesMissing(
 } */
 
 // Utility: Line number locator
-function findLineNumber(searchString, content) {
+/*function findLineNumber(searchString, content) {
   const lines = content.split("\n");
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].includes(searchString)) return i + 1;
   }
   return -1;
+}*/
+
+function findLineNumber(searchString, content) {
+  const index = content.indexOf(searchString);
+  if (index === -1) return -1;
+
+  const linesUntilMatch = content.slice(0, index).split("\n");
+  return linesUntilMatch.length;
 }
 
 /*function findLineNumber(searchString, content, fromIndex = 0) {
