@@ -7,7 +7,11 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const bodyParser = require("body-parser");
 
-const { ignoreDirectories, globalProjectVariables } = require("./config");
+const {
+  ignoreDirectories,
+  globalProjectVariables,
+  ignoreFileFiles,
+} = require("./config");
 const generateExcel = require("./utils/exportExcel");
 const generatePdf = require("./utils/exportPdf");
 const { dir } = require("console");
@@ -536,6 +540,8 @@ function checkForGlobalProjectVariablesMissing(
 
 // Helper to recursively list all files
 async function checkForEmptyFiles(_, warnings, filePath, fileName, content) {
+  if (ignoreFileFiles.includes(fileName)) return;
+
   if (content.trim().length === 0) {
     warnings.push({
       filePath,
