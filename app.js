@@ -10,6 +10,7 @@ const bodyParser = require("body-parser");
 const { ignoreDirectories, globalProjectVariables } = require("./config");
 const generateExcel = require("./utils/exportExcel");
 const generatePdf = require("./utils/exportPdf");
+const { dir } = require("console");
 
 const app = express();
 
@@ -161,6 +162,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
       checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
       await removeConsoleLogs($, warnings, filePath, fileName, content);
+      await checkForEmptyFiles($, warnings, filePath, fileName, content);
       //await checkForBrokenLinks($, warnings, filePath, fileName, content);
       //checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
@@ -182,6 +184,10 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
     case "consoleLogs":
       await removeConsoleLogs($, warnings, filePath, fileName, content);
       break;
+    case "checkForEmptyFiles":
+      await checkForEmptyFiles($, warnings, filePath, fileName, content);
+      break;
+
     case "brokenLinks":
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
       break;
@@ -528,6 +534,18 @@ function checkForGlobalProjectVariablesMissing(
   return -1;
 }*/
 
+// Helper to recursively list all files
+async function checkForEmptyFiles(_, warnings, filePath, fileName, content) {
+  if (content.trim().length === 0) {
+    warnings.push({
+      filePath,
+      fileName,
+      type: "⚠️ Empty file",
+      message: `File '${fileName}' is empty.`,
+      lineNumber: "N/A",
+    });
+  }
+}
 function findLineNumber(searchString, content) {
   const index = content.indexOf(searchString);
   if (index === -1) return -1;
