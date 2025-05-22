@@ -23,4 +23,5 @@ module.exports = {
     "marscms-api.mini91.com",
     "67eb9f87129fda7a090e975a",
   ],
+  ignoreFileFiles: ["index.php"],
 };
