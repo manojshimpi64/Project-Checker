@@ -157,6 +157,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
   switch (checkOption) {
     case "showAll":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
+      checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
       //await checkForBrokenLinks($, warnings, filePath, fileName, content);
       //checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
@@ -171,6 +172,9 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       break;
     case "missingAltTags":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
+      break;
+    case "invalidMailtoLinks":
+      checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
       break;
     case "brokenLinks":
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
@@ -397,6 +401,66 @@ function checkForGlobalProjectVariablesMissing(
         fileName,
         type: "⚠️ Global variable usage",
         message: `Global variable '${varName}' found. Consider modular approach.`,
+        lineNumber,
+      });
+    }
+  });
+}
+
+// Checking mailto links
+
+function checkForInvalidMailtoLinks($, warnings, filePath, fileName, content) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const lines = content.split("\n");
+
+  // To track where we last found href to handle duplicates properly
+  let lastIndex = 0;
+
+  $("a").each((_, el) => {
+    const href = $(el).attr("href") || "";
+    const target = $(el).attr("target");
+
+    if (!href.startsWith("mailto:")) return;
+
+    const email = href.replace("mailto:", "").trim();
+
+    // Prepare a snippet to search for: use href + 'href="' to avoid false matches
+    const searchSnippet = `href="${href}"`;
+
+    // Find index of this link starting from lastIndex to support duplicates
+    const index = content.indexOf(searchSnippet, lastIndex);
+
+    if (index === -1) {
+      // fallback if not found, just skip line number
+      lastIndex = 0;
+      return;
+    }
+
+    lastIndex = index + searchSnippet.length;
+
+    // Calculate line number by counting \n before index
+    let lineNumber = content.substring(0, index).split("\n").length;
+
+    // Check if line contains #evIgnore
+    const shouldIgnore = lines[lineNumber - 1]?.includes("#evIgnore");
+    if (shouldIgnore) return;
+
+    if (!emailRegex.test(email)) {
+      warnings.push({
+        filePath,
+        fileName,
+        type: "⚠️ Invalid mailto",
+        message: `Invalid mailto link '${href}'.`,
+        lineNumber,
+      });
+    }
+
+    if (target !== "_blank") {
+      warnings.push({
+        filePath,
+        fileName,
+        type: '⚠️ Missing target="_blank"',
+        message: `Mailto link '${href}' should use target="_blank".`,
         lineNumber,
       });
     }
