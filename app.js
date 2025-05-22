@@ -157,6 +157,8 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
   switch (checkOption) {
     case "showAll":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
+      checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
+      removeConsoleLogs($, warnings, filePath, fileName, content);
       //await checkForBrokenLinks($, warnings, filePath, fileName, content);
       //checkForMissingFooter($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
@@ -171,6 +173,12 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       break;
     case "missingAltTags":
       checkForMissingAltAttributes($, warnings, filePath, fileName, content);
+      break;
+    case "invalidMailtoLinks":
+      checkForInvalidMailtoLinks($, warnings, filePath, fileName, content);
+      break;
+    case "consoleLogs":
+      removeConsoleLogs($, warnings, filePath, fileName, content);
       break;
     case "brokenLinks":
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
@@ -403,6 +411,85 @@ function checkForGlobalProjectVariablesMissing(
   });
 }
 
+// Checking mailto links
+
+function checkForInvalidMailtoLinks($, warnings, filePath, fileName, content) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const lines = content.split("\n");
+
+  // To track where we last found href to handle duplicates properly
+  let lastIndex = 0;
+
+  $("a").each((_, el) => {
+    const href = $(el).attr("href") || "";
+    const target = $(el).attr("target");
+
+    if (!href.startsWith("mailto:")) return;
+
+    const email = href.replace("mailto:", "").trim();
+    const searchSnippet = `href="${href}"`;
+    // Find index of this link starting from lastIndex to support duplicates
+    const index = content.indexOf(searchSnippet, lastIndex);
+
+    if (index === -1) {
+      // fallback if not found, just skip line number
+      lastIndex = 0;
+      return;
+    }
+
+    lastIndex = index + searchSnippet.length;
+
+    // Calculate line number by counting \n before index
+    let lineNumber = content.substring(0, index).split("\n").length;
+
+    // Check if line contains #evIgnore
+    const shouldIgnore = lines[lineNumber - 1]?.includes("#evIgnore");
+    if (shouldIgnore) return;
+
+    if (!emailRegex.test(email)) {
+      warnings.push({
+        filePath,
+        fileName,
+        type: "⚠️ Invalid mailto",
+        message: `Invalid mailto link '${href}'.`,
+        lineNumber,
+      });
+    }
+
+    if (target !== "_blank") {
+      warnings.push({
+        filePath,
+        fileName,
+        type: '⚠️ Missing target="_blank"',
+        message: `Mailto link '${href}' should use target="_blank".`,
+        lineNumber,
+      });
+    }
+  });
+}
+
+// checkForConsoleLogs
+function removeConsoleLogs(_, warnings, filePath, fileName, content) {
+  const lines = content.split("\n");
+  lines.forEach((line, index) => {
+    if (
+      line.includes("console.log") ||
+      line.includes("console.error") ||
+      line.includes("console.warn")
+    ) {
+      if (line.includes("#evIgnore")) return;
+
+      warnings.push({
+        filePath,
+        fileName,
+        type: "⚠️ Console statement",
+        message: `Avoid using '${line.trim()}' in production code.`,
+        lineNumber: index + 1,
+      });
+    }
+  });
+}
+
 /*
 function checkForGlobalProjectVariablesMissing(
   _,
@@ -431,12 +518,20 @@ function checkForGlobalProjectVariablesMissing(
 } */
 
 // Utility: Line number locator
-function findLineNumber(searchString, content) {
+/*function findLineNumber(searchString, content) {
   const lines = content.split("\n");
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].includes(searchString)) return i + 1;
   }
   return -1;
+}*/
+
+function findLineNumber(searchString, content) {
+  const index = content.indexOf(searchString);
+  if (index === -1) return -1;
+
+  const linesUntilMatch = content.slice(0, index).split("\n");
+  return linesUntilMatch.length;
 }
 
 /*function findLineNumber(searchString, content, fromIndex = 0) {
