@@ -195,14 +195,19 @@ function checkForHtmlComments($, warnings, filePath, fileName, content) {
   }
 }
 
-// Check for missing footer
 function checkForGlobalProjectVariablesMissing(
   _,
   warnings,
   filePath,
   fileName,
-  content
+  content,
+  ignoreFiles = ["enno_global_tpl.php"]
 ) {
+  // Skip processing if file is in ignore list
+  if (ignoreFiles.includes(fileName)) {
+    return;
+  }
+
   const globals = globalProjectVariables;
   const lines = content.split("\n");
 
@@ -239,6 +244,50 @@ function checkForGlobalProjectVariablesMissing(
     }
   });
 }
+
+// function checkForGlobalProjectVariablesMissing(
+//   _,
+//   warnings,
+//   filePath,
+//   fileName,
+//   content
+// ) {
+//   const globals = globalProjectVariables;
+//   const lines = content.split("\n");
+
+//   globals.forEach((varName) => {
+//     const regex = new RegExp(varName, "g"); // Match all occurrences
+//     let match;
+
+//     while ((match = regex.exec(content)) !== null) {
+//       const matchIndex = match.index;
+
+//       // Find the line number and content
+//       let charCount = 0;
+//       let lineNumber = 0;
+//       for (let i = 0; i < lines.length; i++) {
+//         charCount += lines[i].length + 1; // +1 for the newline char
+//         if (charCount > matchIndex) {
+//           lineNumber = i + 1;
+//           break;
+//         }
+//       }
+
+//       const lineContent = lines[lineNumber - 1];
+
+//       // Skip if the line contains "#evIgnore"
+//       if (lineContent.includes("#evIgnore")) continue;
+
+//       warnings.push({
+//         filePath,
+//         fileName,
+//         type: "⚠️ Global variable usage",
+//         message: `Global variable '${varName}' found. Consider modular approach.`,
+//         lineNumber,
+//       });
+//     }
+//   });
+// }
 
 // Check for missing footer
 function checkForMissingFooter($, warnings, filePath, fileName, content) {
