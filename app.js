@@ -1,9 +1,6 @@
 const express = require("express");
 const fs = require("fs-extra");
 const path = require("path");
-const glob = require("glob");
-
-const axios = require("axios");
 const cheerio = require("cheerio");
 const bodyParser = require("body-parser");
 
@@ -25,6 +22,8 @@ const {
   checkForMissingFooter,
   getAllFolders,
   checkFolderForMissingIndexPhp,
+  findUnusedImages,
+  findMissingImages,
 } = require("./utils/globalFunction");
 
 const app = express();
@@ -182,6 +181,8 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       await removeConsoleLogs($, warnings, filePath, fileName, content);
       await checkForEmptyFiles($, warnings, filePath, fileName, content);
       checkForHtmlComments($, warnings, filePath, fileName, content);
+      await findMissingImages(basePath, warnings);
+      await findUnusedImages(basePath, warnings);
 
       //start - Scan all folders (including empty ones)
       for (const folder of allFolders) {
@@ -209,7 +210,12 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
     case "checkForEmptyFiles":
       await checkForEmptyFiles($, warnings, filePath, fileName, content);
       break;
-
+    case "findMissingImages":
+      await findMissingImages(basePath, warnings);
+      break;
+    case "findUnusedImages":
+      await findUnusedImages(basePath, warnings);
+      break;
     case "brokenLinks":
       await checkForBrokenLinks($, warnings, filePath, fileName, content);
       break;

@@ -1,5 +1,6 @@
 const fs = require("fs-extra");
 const path = require("path");
+const cheerio = require("cheerio");
 const {
   ignoreFileFiles,
   globalProjectVariables,
@@ -298,7 +299,121 @@ async function checkFolderForMissingIndexPhp(folderPath, warnings) {
     });
   }
 }
-//end
+
+// Start missing images check code
+function isWarningDuplicate(warnings, warningKey) {
+  return warnings.some((w) => w.warningKey === warningKey);
+}
+
+async function findMissingImages(directoryPath, warnings) {
+  const referencedImages = new Map(); // Map<imgName, Set<"filePath|lineNumber">>
+  const existingImages = new Set();
+
+  await scanDirectory(directoryPath, referencedImages, existingImages);
+
+  for (const [img, references] of referencedImages.entries()) {
+    if (!existingImages.has(img)) {
+      for (const refKey of references) {
+        const [filePath, lineNumberStr] = refKey.split("|");
+        const lineNumber = parseInt(lineNumberStr, 10);
+
+        const warningKey = `missing|${img}|${filePath}|${lineNumber}`;
+
+        if (!isWarningDuplicate(warnings, warningKey)) {
+          warnings.push({
+            filePath,
+            fileName: path.basename(filePath),
+            type: "🖼️ Missing Image File",
+            message: `The image '${img}' is referenced in code but does not exist in the directory.`,
+            lineNumber,
+            warningKey,
+          });
+        }
+      }
+    }
+  }
+}
+
+async function scanDirectory(dirPath, referencedImages, existingImages) {
+  const entries = await fs.readdir(dirPath);
+
+  for (const entry of entries) {
+    if (ignoreDirectories.includes(entry)) continue;
+
+    const fullPath = path.join(dirPath, entry);
+    const stat = await fs.stat(fullPath);
+
+    if (stat.isDirectory()) {
+      await scanDirectory(fullPath, referencedImages, existingImages);
+    } else {
+      const ext = path.extname(entry).toLowerCase();
+
+      if (
+        [".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".pdf"].includes(ext)
+      ) {
+        existingImages.add(entry);
+      }
+
+      if ([".html", ".php", ".js", ".jsx", ".ts", ".tsx"].includes(ext)) {
+        const content = await fs.readFile(fullPath, "utf-8");
+        const $ = cheerio.load(content);
+        const lines = content.split("\n");
+
+        $("img").each((_, el) => {
+          const src = $(el).attr("src");
+          if (!src || src.startsWith("http")) return;
+
+          const img = path.basename(src);
+
+          // Find **all** line numbers where this img src appears, not just first occurrence
+          const imgLines = [];
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(src)) {
+              imgLines.push(i + 1);
+            }
+          }
+
+          if (!referencedImages.has(img)) {
+            referencedImages.set(img, new Set());
+          }
+
+          const refSet = referencedImages.get(img);
+
+          // Add all found line numbers for this image in this file
+          for (const lineNumber of imgLines) {
+            const key = `${fullPath}|${lineNumber}`;
+            refSet.add(key);
+          }
+        });
+      }
+    }
+  }
+}
+
+async function findUnusedImages(directoryPath, warnings) {
+  const referencedImages = new Map(); // Map<imgName, Set<"filePath|lineNumber">>
+  const existingImages = new Set();
+
+  await scanDirectory(directoryPath, referencedImages, existingImages);
+
+  for (const img of existingImages) {
+    if (!referencedImages.has(img)) {
+      const warningKey = `unused|${img}`;
+
+      if (!isWarningDuplicate(warnings, warningKey)) {
+        warnings.push({
+          filePath: directoryPath,
+          fileName: img,
+          type: "📁 Unused Image File",
+          message: `The image '${img}' exists in the project but is never referenced in code files.`,
+          lineNumber: null,
+          warningKey,
+        });
+      }
+    }
+  }
+}
+// findUnused Images end
 
 module.exports = {
   checkForMissingAltAttributes,
@@ -311,4 +426,6 @@ module.exports = {
   checkForMissingFooter,
   checkFolderForMissingIndexPhp,
   getAllFolders,
+  findMissingImages,
+  findUnusedImages,
 };

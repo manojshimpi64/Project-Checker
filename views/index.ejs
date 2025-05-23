@@ -72,16 +72,19 @@
                 required
               >
                 <option value="">-- Choose Check Type --</option>
-                <option value="showAll" <%= checkOption === 'showAll' ? 'selected' : '' %>>Check All</option>
-                <option value="missingAltTags" <%= checkOption === 'missingAltTags' ? 'selected' : '' %>>Missing Alt Tags</option>
-                <option value="htmlComments" <%= checkOption === 'htmlComments' ? 'selected' : '' %>>HTML Comments</option>
-                <option value="invalidMailtoLinks" <%= checkOption === 'invalidMailtoLinks' ? 'selected' : '' %>>Invalid Mailto Links</option>
-                <option value="consoleLogs" <%= checkOption === 'consoleLogs' ? 'selected' : '' %>>Console Logs</option>
-                <option value="checkForEmptyFiles" <%= checkOption === 'checkForEmptyFiles' ? 'selected' : '' %>>Check Empty Files</option> 
-                <!-- <option value="brokenLinks" <%= checkOption === 'brokenLinks' ? 'selected' : '' %>>Broken Links</option>
-                <option value="missingFooter" <%= checkOption === 'missingFooter' ? 'selected' : '' %>>Missing Footer</option> -->
-                <option value="GlobalProjectVariablesMissing" <%= checkOption === 'GlobalProjectVariablesMissing' ? 'selected' : '' %>>Global Variable Usage</option>
-                <option value="missingIndexPhp" <%= checkOption === 'missingIndexPhp' ? 'selected' : '' %>>Missing index.php Files</option>
+                <option value="showAll" <%= checkOption === 'showAll' ? 'selected' : '' %>>Check All (Perform all available checks)</option>
+<option value="missingAltTags" <%= checkOption === 'missingAltTags' ? 'selected' : '' %>>Missing Alt Tags (Detect <img> tags without alt attributes)</option>
+<option value="htmlComments" <%= checkOption === 'htmlComments' ? 'selected' : '' %>>HTML Comments (Find HTML comments in the code)</option>
+<option value="invalidMailtoLinks" <%= checkOption === 'invalidMailtoLinks' ? 'selected' : '' %>>Invalid Mailto Links (Locate malformed or broken mailto: links)</option>
+<option value="consoleLogs" <%= checkOption === 'consoleLogs' ? 'selected' : '' %>>Console Logs (Identify console.log statements in JavaScript)</option>
+<option value="checkForEmptyFiles" <%= checkOption === 'checkForEmptyFiles' ? 'selected' : '' %>>Check Empty Files (Find files that are empty or unused)</option>
+<option value="findMissingImages" <%= checkOption === 'findMissingImages' ? 'selected' : '' %>>Find Missing Images (Images used in the code but not present in the directory)</option>
+<option value="findUnusedImages" <%= checkOption === 'findUnusedImages' ? 'selected' : '' %>>Find Unused Images (Images present in the directory but not used in code)</option>
+<!-- <option value="brokenLinks" <%= checkOption === 'brokenLinks' ? 'selected' : '' %>>Broken Links (Find links that lead to 404 or unreachable pages)</option>
+<option value="missingFooter" <%= checkOption === 'missingFooter' ? 'selected' : '' %>>Missing Footer (Detect pages without a required footer)</option> -->
+<option value="GlobalProjectVariablesMissing" <%= checkOption === 'GlobalProjectVariablesMissing' ? 'selected' : '' %>>Global Variable Usage (Detect use of global variables in project scope)</option>
+<option value="missingIndexPhp" <%= checkOption === 'missingIndexPhp' ? 'selected' : '' %>>Missing index.php Files (Identify folders missing index.php for routing/security)</option>
+
               </select>
             </div>
             <div class="d-flex justify-content-between">
