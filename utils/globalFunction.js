@@ -5,6 +5,7 @@ const {
   ignoreFileFiles,
   globalProjectVariables,
   ignoreDirectories,
+  ignoreGlobalFilesForGlobalVariablesCheck,
 } = require("../config");
 
 // Check for missing alt attributes
@@ -201,7 +202,7 @@ function checkForGlobalProjectVariablesMissing(
   filePath,
   fileName,
   content,
-  ignoreFiles = ["enno_global_tpl.php"]
+  ignoreFiles = ignoreGlobalFilesForGlobalVariablesCheck
 ) {
   // Skip processing if file is in ignore list
   if (ignoreFiles.includes(fileName)) {

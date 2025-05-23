@@ -24,4 +24,5 @@ module.exports = {
     "67eb9f87129fda7a090e975a",
   ],
   ignoreFileFiles: ["index.php"],
+  ignoreGlobalFilesForGlobalVariablesCheck: ["enno_global_tpl.php"],
 };
