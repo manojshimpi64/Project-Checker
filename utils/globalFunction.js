@@ -349,12 +349,16 @@ async function scanDirectory(dirPath, referencedImages, existingImages) {
       const ext = path.extname(entry).toLowerCase();
 
       if (
-        [".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".pdf"].includes(ext)
+        [".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".avif"].includes(
+          ext
+        )
       ) {
         existingImages.add(entry);
       }
 
-      if ([".html", ".php", ".js", ".jsx", ".ts", ".tsx"].includes(ext)) {
+      if (
+        [".html", ".php", ".js", ".jsx", ".ts", ".tsx", ".css"].includes(ext)
+      ) {
         const content = await fs.readFile(fullPath, "utf-8");
         const $ = cheerio.load(content);
         const lines = content.split("\n");
@@ -369,6 +373,7 @@ async function scanDirectory(dirPath, referencedImages, existingImages) {
           const imgLines = [];
           for (let i = 0; i < lines.length; i++) {
             if (lines[i].includes(src)) {
+              if (lines[i].includes("#evIgnore")) continue;
               imgLines.push(i + 1);
             }
           }
