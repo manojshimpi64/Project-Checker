@@ -249,6 +249,9 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
     case "oldProjectDomains":
       checkForOldProjectDomains($, warnings, filePath, fileName, content);
       break;
+    case "findhttpUrls":
+      findhttpUrls(basePath, warnings);
+      break;
   }
 }
 
