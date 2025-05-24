@@ -22,6 +22,7 @@ import {
   findMissingImages,
   testingFiles,
   checkForOldProjectDomains,
+  findhttpUrls,
 } from "./utils/globalFunction.js";
 
 const app = express();
@@ -222,6 +223,9 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       break;
     case "htmlComments":
       checkForHtmlComments($, warnings, filePath, fileName, content);
+      break;
+    case "findhttpUrls":
+      await findhttpUrls(basePath, warnings);
       break;
     case "GlobalProjectVariablesMissing":
       checkForGlobalProjectVariablesMissing(

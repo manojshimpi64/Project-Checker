@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import * as cheerio from "cheerio";
 import config from "../config.js";
+import readline from "readline";
 
 // Check for missing alt attributes
 function checkForMissingAltAttributes(
@@ -692,6 +693,54 @@ async function testingFiles(directoryPath, warnings, warningSet) {
 }
 // Testing files end
 
+// Checking for http urls
+
+async function findhttpUrls(directoryPath, warnings) {
+  const entries = await fs.promises.readdir(directoryPath, {
+    withFileTypes: true,
+  });
+
+  for (const entry of entries) {
+    const fullPath = path.join(directoryPath, entry.name);
+
+    if (entry.isDirectory()) {
+      if (config.ignoreDirectories.includes(entry.name)) {
+        continue; // 🚫 Skip ignored directory
+      }
+      await findhttpUrls(fullPath, warnings); // Recursive call
+    } else if (entry.isFile()) {
+      const rl = readline.createInterface({
+        input: fs.createReadStream(fullPath),
+        crlfDelay: Infinity,
+      });
+
+      let lineNumber = 0;
+
+      for await (const line of rl) {
+        lineNumber++;
+
+        const matches = line.match(/http:\/\/[^\s"'<>]+/g); // Match all http:// URLs
+        if (matches) {
+          for (const url of matches) {
+            const warningKey = `insecure|${url}|${fullPath}|${lineNumber}`;
+
+            if (!isWarningDuplicate(warnings, warningKey)) {
+              warnings.push({
+                filePath: fullPath,
+                fileName: path.basename(fullPath),
+                type: "🔓 Insecure URL",
+                message: `The URL '${url}' uses 'http://' and should be updated to 'https://'.`,
+                lineNumber,
+                warningKey,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 export {
   checkForMissingAltAttributes,
   checkForInvalidMailtoLinks,
@@ -707,4 +756,5 @@ export {
   findUnusedImages,
   testingFiles,
   checkForOldProjectDomains,
+  findhttpUrls,
 };
