@@ -761,10 +761,7 @@ export {
   findMissingImages,
   findUnusedImages,
   testingFiles,
-<<<<<<< HEAD
   checkDotHtmlLinkInAnchor,
-=======
   checkForOldProjectDomains,
   findhttpUrls,
->>>>>>> 4a9d3bb516e6089c0a9382d098ec245e08a9b356
 };
