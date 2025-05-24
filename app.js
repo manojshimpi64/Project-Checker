@@ -21,6 +21,7 @@ import {
   findUnusedImages,
   findMissingImages,
   testingFiles,
+  checkDotHtmlLinkInAnchor,
 } from "./utils/globalFunction.js";
 
 const app = express();
@@ -186,6 +187,7 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
         await checkFolderForMissingIndexPhp(folder, warnings);
       }
       //end
+      checkDotHtmlLinkInAnchor($, warnings, filePath, fileName, content);
 
       checkForGlobalProjectVariablesMissing(
         $,
@@ -221,6 +223,10 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       break;
     case "htmlComments":
       checkForHtmlComments($, warnings, filePath, fileName, content);
+      break;
+
+    case "checkDotHtmlLinkInAnchor":
+      checkDotHtmlLinkInAnchor($, warnings, filePath, fileName, content);
       break;
     case "GlobalProjectVariablesMissing":
       checkForGlobalProjectVariablesMissing(

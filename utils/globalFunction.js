@@ -192,6 +192,56 @@ function checkForHtmlComments($, warnings, filePath, fileName, content) {
   }
 }
 
+function checkDotHtmlLinkInAnchor(
+  _,
+  warnings,
+  filePath,
+  fileName,
+  content,
+  ignoreFiles = config.ignoreGlobalFilesForGlobalVariablesCheck
+) {
+  // Skip processing if file is in ignore list
+  if (ignoreFiles.includes(fileName)) {
+    return;
+  }
+  // Pattern to match any reference to .html pages in the content (links, scripts, etc.)
+  const htmlLinkPattern = /["']([^"']+\.html)["']/g; // Matches href="page.html", src="page.html", etc.
+  const lines = content.split("\n");
+
+  let match;
+
+  // Loop through all matches of .html links
+  while ((match = htmlLinkPattern.exec(content)) !== null) {
+    const matchUrl = match[1]; // Extract the matched URL (e.g., "project-details.html")
+    const matchIndex = match.index;
+
+    // Find the line number and content where the match occurred
+    let charCount = 0;
+    let lineNumber = 0;
+    for (let i = 0; i < lines.length; i++) {
+      charCount += lines[i].length + 1; // +1 for the newline char
+      if (charCount > matchIndex) {
+        lineNumber = i + 1;
+        break;
+      }
+    }
+
+    const lineContent = lines[lineNumber - 1];
+
+    // Skip processing if the line contains "#evIgnore"
+    if (lineContent.includes("#evIgnore")) continue;
+
+    // Add a warning for the .html link found
+    warnings.push({
+      filePath,
+      fileName,
+      type: "⚠️ .html page link",
+      message: `Found reference to '.html' page link: '${matchUrl}'. Please consider using dynamic routing or other strategies for handling links.`,
+      lineNumber,
+    });
+  }
+}
+
 function checkForGlobalProjectVariablesMissing(
   _,
   warnings,
@@ -241,50 +291,6 @@ function checkForGlobalProjectVariablesMissing(
     }
   });
 }
-
-// function checkForGlobalProjectVariablesMissing(
-//   _,
-//   warnings,
-//   filePath,
-//   fileName,
-//   content
-// ) {
-//   const globals = config.globalProjectVariables;
-//   const lines = content.split("\n");
-
-//   globals.forEach((varName) => {
-//     const regex = new RegExp(varName, "g"); // Match all occurrences
-//     let match;
-
-//     while ((match = regex.exec(content)) !== null) {
-//       const matchIndex = match.index;
-
-//       // Find the line number and content
-//       let charCount = 0;
-//       let lineNumber = 0;
-//       for (let i = 0; i < lines.length; i++) {
-//         charCount += lines[i].length + 1; // +1 for the newline char
-//         if (charCount > matchIndex) {
-//           lineNumber = i + 1;
-//           break;
-//         }
-//       }
-
-//       const lineContent = lines[lineNumber - 1];
-
-//       // Skip if the line contains "#evIgnore"
-//       if (lineContent.includes("#evIgnore")) continue;
-
-//       warnings.push({
-//         filePath,
-//         fileName,
-//         type: "⚠️ Global variable usage",
-//         message: `Global variable '${varName}' found. Consider modular approach.`,
-//         lineNumber,
-//       });
-//     }
-//   });
-// }
 
 // Check for missing footer
 function checkForMissingFooter($, warnings, filePath, fileName, content) {
@@ -687,4 +693,5 @@ export {
   findMissingImages,
   findUnusedImages,
   testingFiles,
+  checkDotHtmlLinkInAnchor,
 };
