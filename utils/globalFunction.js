@@ -460,7 +460,7 @@ async function scanDirectory(dirPath, referencedImages, existingImages) {
   }
 }
 
-async function findUnusedImages(directoryPath, warnings) {
+/*async function findUnusedImages(directoryPath, warnings) {
   const referencedImages = new Map(); // Map<imgName, Set<"filePath|lineNumber">>
   const existingImages = new Set();
 
@@ -482,8 +482,125 @@ async function findUnusedImages(directoryPath, warnings) {
       }
     }
   }
+}*/
+
+//This function used for unused images
+async function scanDirectory_unused(dirPath, referencedImages, existingImages) {
+  const entries = await fs.readdir(dirPath);
+
+  for (const entry of entries) {
+    if (config.ignoreDirectories.includes(entry)) continue;
+
+    const fullPath = path.join(dirPath, entry);
+    const stat = await fs.stat(fullPath);
+
+    if (stat.isDirectory()) {
+      await scanDirectory_unused(fullPath, referencedImages, existingImages); // Recursive call for subdirectories
+    } else {
+      const ext = path.extname(entry).toLowerCase();
+
+      // Check if the file is an image
+      if (
+        [".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".avif"].includes(
+          ext
+        )
+      ) {
+        // Store image with its full path (for folder-wise check)
+        if (!existingImages.has(entry)) {
+          existingImages.set(entry, []); // Initialize an empty array for storing paths
+        }
+        existingImages.get(entry).push(fullPath); // Add the full path to the image
+      }
+
+      // Check for code files to look for referenced images
+      if (
+        [".html", ".php", ".js", ".jsx", ".ts", ".tsx", ".css"].includes(ext)
+      ) {
+        const content = await fs.readFile(fullPath, "utf-8");
+        const $ = cheerio.load(content);
+        const lines = content.split("\n");
+
+        $("img").each((_, el) => {
+          const src = $(el).attr("src");
+          if (!src || src.startsWith("http")) return;
+
+          const img = path.basename(src); // Extract image name from src
+
+          // Find all line numbers where this image is referenced in the code
+          const imgLines = [];
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(src)) {
+              if (lines[i].includes("#evIgnore")) continue;
+              imgLines.push(i + 1); // Line numbers (1-based)
+            }
+          }
+
+          if (!referencedImages.has(img)) {
+            referencedImages.set(img, new Set());
+          }
+
+          const refSet = referencedImages.get(img);
+
+          // Add all line numbers for this image
+          for (const lineNumber of imgLines) {
+            const key = `${fullPath}|${lineNumber}`;
+            refSet.add(key);
+          }
+        });
+      }
+    }
+  }
 }
-// End missing images check code
+
+async function findUnusedImages(directoryPath, warnings) {
+  const referencedImages = new Map(); // Map<imgName, Set<"filePath|lineNumber">>
+  const existingImages = new Map(); // Map<imgName, [fullPath1, fullPath2, ...]>
+
+  await scanDirectory_unused(directoryPath, referencedImages, existingImages);
+
+  for (const [imgName, paths] of existingImages.entries()) {
+    if (!referencedImages.has(imgName)) {
+      const warningKey = `unused|${imgName}`;
+
+      // Check for duplicates in different folders
+      if (paths.length > 1) {
+        for (let i = 0; i < paths.length; i++) {
+          const fullPath = paths[i];
+          const folder = path.dirname(fullPath); // Get the folder of the image
+          const duplicateWarningKey = `duplicate|${imgName}|${folder}`;
+
+          if (!isWarningDuplicate(warnings, duplicateWarningKey)) {
+            warnings.push({
+              filePath: fullPath,
+              fileName: imgName,
+              type: "📁 Unused Image File",
+              message: `The image '${imgName}' exists in the project but is never referenced in code files.`,
+              lineNumber: null,
+              warningKey: duplicateWarningKey,
+            });
+          }
+        }
+      } else {
+        // Single image, unused
+        const fullPath = paths[0];
+        const warningKey = `unused|${imgName}`;
+
+        if (!isWarningDuplicate(warnings, warningKey)) {
+          warnings.push({
+            filePath: fullPath, // Full path of the image
+            fileName: imgName,
+            type: "📁 Unused Image File",
+            message: `The image '${imgName}' exists in the project but is never referenced in code files.`,
+            lineNumber: null,
+            warningKey,
+          });
+        }
+      }
+    }
+  }
+}
+
+// End This function used for unused images
 
 // Checking for testing files code
 async function testingFiles(directoryPath, warnings, warningSet) {
