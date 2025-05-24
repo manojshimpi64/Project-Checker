@@ -2,9 +2,9 @@ import fs from "fs-extra";
 import path from "path";
 import * as cheerio from "cheerio";
 import config from "../config.js";
+import readline from "readline";
 
 // Check for missing alt attributes
-
 function checkForMissingAltAttributes(
   $,
   warnings,
@@ -161,7 +161,6 @@ async function checkForBrokenLinks($, warnings, filePath, fileName, content) {
 }
 
 // Check for HTML comments
-
 function checkForHtmlComments($, warnings, filePath, fileName, content) {
   const commentRegex = /<!--([\s\S]*?)-->/g;
   let match;
@@ -314,7 +313,7 @@ function findLineNumber(searchString, content) {
   return linesUntilMatch.length;
 }
 
-//start
+// D - Start
 // Get all folders recursively
 async function getAllFolders(dir, folders = []) {
   const items = await fs.readdir(dir);
@@ -331,6 +330,7 @@ async function getAllFolders(dir, folders = []) {
 
   return folders;
 }
+
 // Push warning if index.php was created
 async function checkFolderForMissingIndexPhp(folderPath, warnings) {
   const indexPath = path.join(folderPath, "index.php");
@@ -351,6 +351,26 @@ async function checkFolderForMissingIndexPhp(folderPath, warnings) {
     });
   }
 }
+
+// Check for old project domain names inside file content
+function checkForOldProjectDomains(_, warnings, filePath, fileName, content) {
+  const lines = content.split("\n");
+
+  config.oldProjectDomainsNames.forEach((domain) => {
+    lines.forEach((line, index) => {
+      if (line.includes(domain)) {
+        warnings.push({
+          filePath,
+          fileName,
+          type: "⚠️ Old Domain Reference",
+          message: `Domain "${domain}" found in file.`,
+          lineNumber: index + 1,
+        });
+      }
+    });
+  });
+}
+// D - End
 
 // Start missing images check code
 function isWarningDuplicate(warnings, warningKey) {
@@ -679,6 +699,54 @@ async function testingFiles(directoryPath, warnings, warningSet) {
 }
 // Testing files end
 
+// Checking for http urls
+
+async function findhttpUrls(directoryPath, warnings) {
+  const entries = await fs.promises.readdir(directoryPath, {
+    withFileTypes: true,
+  });
+
+  for (const entry of entries) {
+    const fullPath = path.join(directoryPath, entry.name);
+
+    if (entry.isDirectory()) {
+      if (config.ignoreDirectories.includes(entry.name)) {
+        continue; // 🚫 Skip ignored directory
+      }
+      await findhttpUrls(fullPath, warnings); // Recursive call
+    } else if (entry.isFile()) {
+      const rl = readline.createInterface({
+        input: fs.createReadStream(fullPath),
+        crlfDelay: Infinity,
+      });
+
+      let lineNumber = 0;
+
+      for await (const line of rl) {
+        lineNumber++;
+
+        const matches = line.match(/http:\/\/[^\s"'<>]+/g); // Match all http:// URLs
+        if (matches) {
+          for (const url of matches) {
+            const warningKey = `insecure|${url}|${fullPath}|${lineNumber}`;
+
+            if (!isWarningDuplicate(warnings, warningKey)) {
+              warnings.push({
+                filePath: fullPath,
+                fileName: path.basename(fullPath),
+                type: "🔓 Insecure URL",
+                message: `The URL '${url}' uses 'http://' and should be updated to 'https://'.`,
+                lineNumber,
+                warningKey,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 export {
   checkForMissingAltAttributes,
   checkForInvalidMailtoLinks,
@@ -693,5 +761,10 @@ export {
   findMissingImages,
   findUnusedImages,
   testingFiles,
+<<<<<<< HEAD
   checkDotHtmlLinkInAnchor,
+=======
+  checkForOldProjectDomains,
+  findhttpUrls,
+>>>>>>> 4a9d3bb516e6089c0a9382d098ec245e08a9b356
 };
