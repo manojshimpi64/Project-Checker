@@ -24,4 +24,10 @@ export default {
   ],
   ignoreFileFiles: ["index.php"],
   ignoreGlobalFilesForGlobalVariablesCheck: ["enno_global_tpl.php"],
+  oldProjectDomainsNames: [
+    "exampleNew.com",
+    "sampleOld.com",
+    "google.com",
+    "facebook.com",
+  ],
 };

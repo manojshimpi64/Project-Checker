@@ -4,7 +4,6 @@ import * as cheerio from "cheerio";
 import config from "../config.js";
 
 // Check for missing alt attributes
-
 function checkForMissingAltAttributes(
   $,
   warnings,
@@ -161,7 +160,6 @@ async function checkForBrokenLinks($, warnings, filePath, fileName, content) {
 }
 
 // Check for HTML comments
-
 function checkForHtmlComments($, warnings, filePath, fileName, content) {
   const commentRegex = /<!--([\s\S]*?)-->/g;
   let match;
@@ -308,7 +306,7 @@ function findLineNumber(searchString, content) {
   return linesUntilMatch.length;
 }
 
-//start
+// D - Start
 // Get all folders recursively
 async function getAllFolders(dir, folders = []) {
   const items = await fs.readdir(dir);
@@ -325,6 +323,7 @@ async function getAllFolders(dir, folders = []) {
 
   return folders;
 }
+
 // Push warning if index.php was created
 async function checkFolderForMissingIndexPhp(folderPath, warnings) {
   const indexPath = path.join(folderPath, "index.php");
@@ -345,6 +344,26 @@ async function checkFolderForMissingIndexPhp(folderPath, warnings) {
     });
   }
 }
+
+// Check for old project domain names inside file content
+function checkForOldProjectDomains(_, warnings, filePath, fileName, content) {
+  const lines = content.split("\n");
+
+  config.oldProjectDomainsNames.forEach((domain) => {
+    lines.forEach((line, index) => {
+      if (line.includes(domain)) {
+        warnings.push({
+          filePath,
+          fileName,
+          type: "⚠️ Old Domain Reference",
+          message: `Domain "${domain}" found in file.`,
+          lineNumber: index + 1,
+        });
+      }
+    });
+  });
+}
+// D - End
 
 // Start missing images check code
 function isWarningDuplicate(warnings, warningKey) {
@@ -570,4 +589,5 @@ export {
   findMissingImages,
   findUnusedImages,
   testingFiles,
+  checkForOldProjectDomains,
 };

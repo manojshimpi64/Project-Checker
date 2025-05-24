@@ -21,6 +21,7 @@ import {
   findUnusedImages,
   findMissingImages,
   testingFiles,
+  checkForOldProjectDomains,
 } from "./utils/globalFunction.js";
 
 const app = express();
@@ -241,6 +242,10 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
       for (const folder of allFolders) {
         await checkFolderForMissingIndexPhp(folder, warnings);
       }
+      break;
+
+    case "oldProjectDomains":
+      checkForOldProjectDomains($, warnings, filePath, fileName, content);
       break;
   }
 }
