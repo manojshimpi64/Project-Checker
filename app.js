@@ -20,6 +20,7 @@ import {
   checkFolderForMissingIndexPhp,
   findUnusedImages,
   findMissingImages,
+  testingFiles,
 } from "./utils/globalFunction.js";
 
 const app = express();
@@ -230,6 +231,12 @@ async function checkFile(filePath, basePath, warnings, checkOption) {
         content
       );
       break;
+    case "testingFilesFind":
+      const directory = basePath;
+      const warningSet = new Set();
+      await testingFiles(directory, warnings, warningSet);
+      break;
+
     case "missingIndexPhp":
       for (const folder of allFolders) {
         await checkFolderForMissingIndexPhp(folder, warnings);

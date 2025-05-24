@@ -464,7 +464,97 @@ async function findUnusedImages(directoryPath, warnings) {
     }
   }
 }
-// Find missing and unused Images end
+// End missing images check code
+
+// Checking for testing files code
+async function testingFiles(directoryPath, warnings, warningSet) {
+  //const filePattern = /^[a-z]\.(php|js|ts|jsx|txt)$/i;
+  const filePattern =
+    /^(test|temp|tmp|sample|example|demo|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z)\.(php|js|jsx|ts|tsx|txt)$/i;
+
+  if (config.ignoreDirectories.includes(path.basename(directoryPath))) return;
+
+  try {
+    // Read the directory asynchronously
+    const files = await fs.readdir(directoryPath);
+
+    // Process each item in the directory
+    for (const file of files) {
+      const fullPath = path.join(directoryPath, file); // Get full file path
+
+      const stat = await fs.stat(fullPath); // Get file stats
+
+      if (stat.isDirectory() && !config.ignoreDirectories.includes(file)) {
+        // If it's a directory, recurse into it
+        await testingFiles(fullPath, warnings, warningSet);
+      } else if (filePattern.test(file)) {
+        // If it's a matching file, check it
+        const warningKey = `testingFiles|${fullPath}`;
+
+        // Check if this warning for the file has already been logged
+        if (warningSet.has(warningKey)) {
+          continue; // Skip if this file has already been processed
+        }
+
+        // Prepare the warning message for this specific file
+        const warningMessage = `Found matching file: ${file} at ${fullPath}`;
+
+        // Check if this warning already exists in the warnings array
+        if (
+          warnings.some(
+            (warning) =>
+              warning.filePath === directoryPath &&
+              warning.fileName === file &&
+              warning.type === "⚠️ Matching file found"
+          )
+        ) {
+          continue; // Skip if this warning is a duplicate
+        }
+
+        // Add the warning for this specific file
+        warnings.push({
+          filePath: directoryPath,
+          fileName: file,
+          fullFilePath: fullPath, // Store the full path here
+          type: "⚠️ Matching file found",
+          message: warningMessage,
+          lineNumber: "N/A",
+        });
+
+        // Add the warning to the Set to track it
+        warningSet.add(warningKey);
+      }
+    }
+
+    return { warnings, warningSet };
+  } catch (err) {
+    // Handle any errors when reading the directory
+    const errorMessage = `Error reading directory: ${err.message}`;
+    const errorKey = `testingFiles|${directoryPath}|${errorMessage}`;
+
+    // Check if the error warning has already been logged
+    if (warningSet.has(errorKey)) {
+      return { warnings, warningSet }; // Skip if this error warning has already been logged
+    }
+
+    // Add the error warning to the warnings list
+    warnings.push({
+      filePath: directoryPath,
+      fileName: "N/A",
+      fullFilePath: "N/A",
+      type: "⚠️ Error reading directory",
+      message: errorMessage,
+      lineNumber: "N/A",
+    });
+
+    // Add the error to the Set to track it
+    warningSet.add(errorKey);
+
+    // Return both warnings and warningSet
+    return { warnings, warningSet };
+  }
+}
+// Testing files end
 
 export {
   checkForMissingAltAttributes,
@@ -479,4 +569,5 @@ export {
   getAllFolders,
   findMissingImages,
   findUnusedImages,
+  testingFiles,
 };
