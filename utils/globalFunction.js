@@ -203,6 +203,7 @@ function checkDotHtmlLinkInAnchor(
   if (ignoreFiles.includes(fileName)) {
     return;
   }
+
   // Pattern to match any reference to .html pages in the content (links, scripts, etc.)
   const htmlLinkPattern = /["']([^"']+\.html)["']/g; // Matches href="page.html", src="page.html", etc.
   const lines = content.split("\n");
