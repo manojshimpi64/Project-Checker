@@ -1,14 +1,10 @@
-const fs = require("fs-extra");
-const path = require("path");
-const cheerio = require("cheerio");
-const {
-  ignoreFileFiles,
-  globalProjectVariables,
-  ignoreDirectories,
-  ignoreGlobalFilesForGlobalVariablesCheck,
-} = require("../config");
+import fs from "fs-extra";
+import path from "path";
+import * as cheerio from "cheerio";
+import config from "../config.js";
 
 // Check for missing alt attributes
+
 function checkForMissingAltAttributes(
   $,
   warnings,
@@ -129,7 +125,7 @@ async function removeConsoleLogs(_, warnings, filePath, fileName, content) {
 
 // Check for empty files
 async function checkForEmptyFiles(_, warnings, filePath, fileName, content) {
-  if (ignoreFileFiles.includes(fileName)) return;
+  if (config.ignoreFileFiles.includes(fileName)) return;
 
   if (content.trim().length === 0) {
     warnings.push({
@@ -202,14 +198,14 @@ function checkForGlobalProjectVariablesMissing(
   filePath,
   fileName,
   content,
-  ignoreFiles = ignoreGlobalFilesForGlobalVariablesCheck
+  ignoreFiles = config.ignoreGlobalFilesForGlobalVariablesCheck
 ) {
   // Skip processing if file is in ignore list
   if (ignoreFiles.includes(fileName)) {
     return;
   }
 
-  const globals = globalProjectVariables;
+  const globals = config.globalProjectVariables;
   const lines = content.split("\n");
 
   globals.forEach((varName) => {
@@ -253,7 +249,7 @@ function checkForGlobalProjectVariablesMissing(
 //   fileName,
 //   content
 // ) {
-//   const globals = globalProjectVariables;
+//   const globals = config.globalProjectVariables;
 //   const lines = content.split("\n");
 
 //   globals.forEach((varName) => {
@@ -321,7 +317,7 @@ async function getAllFolders(dir, folders = []) {
     const fullPath = path.join(dir, item);
     const stat = await fs.stat(fullPath);
 
-    if (stat.isDirectory() && !ignoreDirectories.includes(item)) {
+    if (stat.isDirectory() && !config.ignoreDirectories.includes(item)) {
       folders.push(fullPath);
       await getAllFolders(fullPath, folders);
     }
@@ -388,7 +384,7 @@ async function scanDirectory(dirPath, referencedImages, existingImages) {
   const entries = await fs.readdir(dirPath);
 
   for (const entry of entries) {
-    if (ignoreDirectories.includes(entry)) continue;
+    if (config.ignoreDirectories.includes(entry)) continue;
 
     const fullPath = path.join(dirPath, entry);
     const stat = await fs.stat(fullPath);
@@ -468,9 +464,9 @@ async function findUnusedImages(directoryPath, warnings) {
     }
   }
 }
-// findUnused Images end
+// Find missing and unused Images end
 
-module.exports = {
+export {
   checkForMissingAltAttributes,
   checkForInvalidMailtoLinks,
   removeConsoleLogs,

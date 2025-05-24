@@ -1,17 +1,13 @@
-const express = require("express");
-const fs = require("fs-extra");
-const path = require("path");
-const cheerio = require("cheerio");
-const bodyParser = require("body-parser");
+import express from "express";
+import fs from "fs-extra";
+import path from "path";
+import * as cheerio from "cheerio";
+import bodyParser from "body-parser";
+import config from "./config.js";
+import { generateExcel } from "./utils/exportExcel.js";
+import { generatePdf } from "./utils/exportPdf.js";
 
-const {
-  ignoreDirectories,
-  globalProjectVariables,
-  ignoreFileFiles,
-} = require("./config");
-const generateExcel = require("./utils/exportExcel");
-const generatePdf = require("./utils/exportPdf");
-const {
+import {
   checkForMissingAltAttributes,
   checkForInvalidMailtoLinks,
   removeConsoleLogs,
@@ -24,7 +20,7 @@ const {
   checkFolderForMissingIndexPhp,
   findUnusedImages,
   findMissingImages,
-} = require("./utils/globalFunction");
+} from "./utils/globalFunction.js";
 
 const app = express();
 
@@ -142,7 +138,7 @@ async function getReactFiles(dir) {
 
     // Skip ignored folders
     if (stat.isDirectory()) {
-      if (!ignoreDirectories.includes(item)) {
+      if (!config.ignoreDirectories.includes(item)) {
         files.push(...(await getReactFiles(fullPath)));
       }
     } else if (/\.(js|jsx|html|php)$/.test(fullPath)) {

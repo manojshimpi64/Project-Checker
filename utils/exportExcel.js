@@ -1,4 +1,4 @@
-const ExcelJS = require("exceljs");
+import ExcelJS from "exceljs";
 
 function getFormattedDate() {
   const date = new Date();
@@ -46,4 +46,4 @@ async function generateExcel(warnings, res) {
   res.end();
 }
 
-module.exports = generateExcel;
+export { generateExcel };

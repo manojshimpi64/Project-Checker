@@ -1,4 +1,4 @@
-const PDFDocument = require("pdfkit");
+import PDFDocument from "pdfkit";
 
 function getFormattedDate() {
   const date = new Date();
@@ -39,4 +39,4 @@ Message: ${item.message}`,
   doc.end();
 }
 
-module.exports = generatePdf;
+export { generatePdf };

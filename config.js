@@ -1,5 +1,4 @@
-// config.js
-module.exports = {
+export default {
   ignoreDirectories: [
     "node_modules",
     ".git",
